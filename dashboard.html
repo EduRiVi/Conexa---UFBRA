@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vision - Dashboard</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
+body{background:#f0f2f5;min-height:100vh}
+.page{display:none;min-height:100vh}
+.page.active{display:flex}
+.topbar{height:60px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 24px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.btnSair{padding:8px 14px;border:none;border-radius:8px;background:#eee;cursor:pointer}
+
+/* PAINEL DE DADOS (Dashboard de consumo de água) */
+#page-dados{flex-direction:column}
+.topbar-actions{display:flex;gap:8px}
+.dados-wrap{padding:24px;max-width:1000px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:16px}
+.dados-hero{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-radius:16px;padding:24px 28px}
+.dados-hero h2{font-size:26px;margin-bottom:6px}
+.dados-hero p{font-size:14px;opacity:.9}
+.grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.card-d{background:#fff;padding:22px;border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.card-d h3{font-size:15px;color:#444;margin-bottom:14px}
+.big{font-size:38px;font-weight:700;color:#111;line-height:1}
+.big small{font-size:16px;font-weight:500;color:#666}
+.sub{font-size:13px;color:#666;margin-top:8px}
+.tag-var{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:13px;font-weight:700;margin-top:12px}
+.tag-var.down{background:#dcfce7;color:#166534}
+.tag-var.up{background:#fee2e2;color:#991b1b}
+.compare{display:flex;gap:10px;margin-top:16px}
+.compare div{flex:1;background:#f8fafc;border-radius:10px;padding:10px 12px;font-size:12px;color:#666}
+.compare b{display:block;font-size:17px;color:#111;margin-top:2px}
+.bars{display:flex;align-items:flex-end;gap:8px;height:80px;margin-top:16px}
+.bars span{flex:1;background:#c7d2fe;border-radius:6px 6px 0 0;position:relative}
+.bars span.cur{background:#667eea}
+.bars span em{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:10px;font-style:normal;color:#888}
+.progress-box{display:flex;align-items:center;gap:20px}
+.ring{width:96px;height:96px;border-radius:50%;display:grid;place-items:center;flex-shrink:0}
+.ring div{width:72px;height:72px;background:#fff;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:18px}
+.stat-line{font-size:14px;margin-bottom:6px;color:#444}
+.stat-line b{color:#111}
+.curso-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f1f5f9;font-size:14px}
+.curso-item:last-child{border-bottom:none}
+.badge-c{margin-left:auto;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+.badge-c.ok{background:#dcfce7;color:#166534}
+.badge-c.pend{background:#fef3c7;color:#92400e}
+.noticia{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid #f1f5f9}
+.noticia:last-child{border-bottom:none}
+.noticia .emoji{width:46px;height:46px;border-radius:12px;background:#eef2ff;display:grid;place-items:center;font-size:22px;flex-shrink:0}
+.noticia h4{font-size:15px;color:#111;margin-bottom:4px}
+.noticia p{font-size:13px;color:#666;line-height:1.4}
+.noticia small{font-size:11px;color:#999;display:block;margin-top:4px}
+.aviso-demo{font-size:12px;color:#888;text-align:center;padding-bottom:8px}
+</style>
+</head>
+<body>
+
+<!-- DASHBOARD DE DADOS (consumo de água) -->
+<div id="page-dados" class="page active">
+  <div class="topbar">
+    <b>💧 Dashboard de Consumo de Água</b>
+    <div class="topbar-actions">
+      <button class="btnSair" onclick="window.location.href='index.html'">← Voltar</button>
+      <button class="btnSair" onclick="sessionStorage.removeItem('userEmail');window.location.href='index.html'">Sair</button>
+    </div>
+  </div>
+
+  <div class="dados-wrap">
+    <div class="dados-hero">
+      <h2 id="dadosSaudacao">Olá 👋</h2>
+      <p>Acompanhe o consumo de água da sua região, seu progresso nos cursos e as novidades sobre meio ambiente.</p>
+    </div>
+
+    <div class="grid-2">
+      <!-- Consumo médio da região -->
+      <div class="card-d">
+        <h3>🚰 Consumo médio da sua região (último mês)</h3>
+        <div class="big" id="consumoAtual">--<small> L/pessoa/dia</small></div>
+        <div class="sub" id="regiaoNome">Região: --</div>
+        <span class="tag-var" id="tagVariacao">--</span>
+        <div class="compare">
+          <div>Mês anterior<b id="consumoAnterior">--</b></div>
+          <div>Último mês<b id="consumoAtual2">--</b></div>
+        </div>
+      </div>
+
+      <!-- Comparativo -->
+      <div class="card-d">
+        <h3>📈 Comparativo com meses anteriores</h3>
+        <div class="sub" id="textoComparativo" style="margin-top:0">--</div>
+        <div class="bars" id="barras" style="margin-bottom:24px"></div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <!-- Cursos -->
+      <div class="card-d">
+        <h3>🎓 Seus mini cursos</h3>
+        <div class="progress-box">
+          <div class="ring" id="anel"><div id="anelTexto">0%</div></div>
+          <div>
+            <div class="stat-line">✅ Concluídos: <b id="cursosConcluidos">0</b></div>
+            <div class="stat-line">⏳ Restantes: <b id="cursosRestantes">0</b></div>
+            <div class="stat-line">📚 Total: <b id="cursosTotal">0</b></div>
+          </div>
+        </div>
+        <div id="listaCursos" style="margin-top:14px"></div>
+      </div>
+
+      <!-- Notícias -->
+      <div class="card-d">
+        <h3>📰 Últimas notícias — água e meio ambiente</h3>
+        <div id="listaNoticias"></div>
+      </div>
+    </div>
+
+    <div class="aviso-demo">Dados de exemplo para fins demonstrativos do projeto.</div>
+  </div>
+</div>
+
+<script>
+// ===== DADOS DO PAINEL (troque por dados reais / API quando tiver backend) =====
+const DADOS = {
+  regiao: 'Sudeste',
+  consumoAtual: 154,      // L/pessoa/dia no último mês
+  consumoAnterior: 162,   // L/pessoa/dia no mês anterior
+  historico: [
+    {mes:'Mai', valor:165},
+    {mes:'Jun', valor:160},
+    {mes:'Jul', valor:158},
+    {mes:'Ago', valor:163},
+    {mes:'Set', valor:162},
+    {mes:'Out', valor:154}
+  ],
+  cursos: [
+    {nome:'Introdução ao consumo consciente', concluido:true},
+    {nome:'Economia de água em casa', concluido:true},
+    {nome:'Reaproveitamento de água da chuva', concluido:false},
+    {nome:'Pegada hídrica dos alimentos', concluido:false},
+    {nome:'Água e mudanças climáticas', concluido:false}
+  ],
+  noticias: [
+    {emoji:'🌧️', titulo:'Reservatórios iniciam período chuvoso com nível abaixo da média', texto:'Especialistas reforçam a importância de manter hábitos de economia mesmo com a chegada das chuvas.', data:'Há 2 dias'},
+    {emoji:'♻️', titulo:'Cidades ampliam programas de reúso de água', texto:'Iniciativas de reaproveitamento de água tratada ganham espaço em áreas urbanas e industriais.', data:'Há 4 dias'},
+    {emoji:'🌱', titulo:'Preservação de nascentes aumenta a segurança hídrica', texto:'Projetos de reflorestamento ajudam a proteger mananciais que abastecem grandes centros.', data:'Há 1 semana'},
+    {emoji:'🚿', titulo:'Pequenos hábitos reduzem até 30% do consumo doméstico', texto:'Banhos mais curtos e correção de vazamentos estão entre as medidas mais eficazes.', data:'Há 1 semana'}
+  ]
+};
+
+function renderDados(){
+  const d = DADOS;
+
+  // Consumo e variação
+  document.getElementById('consumoAtual').innerHTML = d.consumoAtual + '<small> L/pessoa/dia</small>';
+  document.getElementById('regiaoNome').innerText = 'Região: ' + d.regiao;
+  document.getElementById('consumoAtual2').innerText = d.consumoAtual + ' L';
+  document.getElementById('consumoAnterior').innerText = d.consumoAnterior + ' L';
+
+  const diff = d.consumoAtual - d.consumoAnterior;
+  const pct = Math.abs(diff / d.consumoAnterior * 100).toFixed(1).replace('.', ',');
+  const tag = document.getElementById('tagVariacao');
+  if(diff < 0){
+    tag.className = 'tag-var down';
+    tag.innerText = '▼ Diminuiu ' + pct + '%';
+    document.getElementById('textoComparativo').innerText = 'O consumo diminuiu ' + pct + '% em relação ao mês anterior. Ótimo sinal! 🎉';
+  } else if(diff > 0){
+    tag.className = 'tag-var up';
+    tag.innerText = '▲ Aumentou ' + pct + '%';
+    document.getElementById('textoComparativo').innerText = 'O consumo aumentou ' + pct + '% em relação ao mês anterior. Vamos economizar mais? 💧';
+  } else {
+    tag.className = 'tag-var';
+    tag.innerText = '= Sem variação';
+    document.getElementById('textoComparativo').innerText = 'O consumo se manteve igual ao mês anterior.';
+  }
+
+  // Gráfico de barras
+  const max = Math.max(...d.historico.map(h => h.valor));
+  document.getElementById('barras').innerHTML = d.historico.map((h, i) => {
+    const alt = Math.round(h.valor / max * 100);
+    const cur = i === d.historico.length - 1 ? ' cur' : '';
+    return '<span class="' + cur.trim() + '" style="height:' + alt + '%" title="' + h.valor + ' L"><em>' + h.mes + '</em></span>';
+  }).join('');
+
+  // Cursos
+  const total = d.cursos.length;
+  const concl = d.cursos.filter(c => c.concluido).length;
+  const perc = Math.round(concl / total * 100);
+  document.getElementById('cursosTotal').innerText = total;
+  document.getElementById('cursosConcluidos').innerText = concl;
+  document.getElementById('cursosRestantes').innerText = total - concl;
+  document.getElementById('anelTexto').innerText = perc + '%';
+  document.getElementById('anel').style.background = 'conic-gradient(#667eea ' + perc + '%, #e5e7eb 0)';
+  document.getElementById('listaCursos').innerHTML = d.cursos.map(c =>
+    '<div class="curso-item"><span>' + (c.concluido ? '✅' : '📘') + '</span><span>' + c.nome + '</span>' +
+    '<span class="badge-c ' + (c.concluido ? 'ok' : 'pend') + '">' + (c.concluido ? 'Concluído' : 'Pendente') + '</span></div>'
+  ).join('');
+
+  // Notícias
+  document.getElementById('listaNoticias').innerHTML = d.noticias.map(n =>
+    '<div class="noticia"><div class="emoji">' + n.emoji + '</div><div><h4>' + n.titulo + '</h4><p>' + n.texto + '</p><small>' + n.data + '</small></div></div>'
+  ).join('');
+}
+renderDados();
+
+// Saudação com o e-mail guardado no login
+const emailLogado = sessionStorage.getItem('userEmail');
+if(emailLogado){
+  document.getElementById('dadosSaudacao').innerText = 'Olá, ' + emailLogado + ' 👋';
+}
+</script>
+
+</body>
+</html>

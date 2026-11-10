@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema de Login com Notificação por E-mail</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,sans-serif}
+body{background:#f5f7fb;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.container{background:#fff;width:100%;max-width:900px;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.1);overflow:hidden;display:grid;grid-template-columns:1fr 1fr}
+.left{padding:40px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff}
+.left h1{font-size:28px;margin-bottom:10px}
+.left p{opacity:.9;line-height:1.6}
+.form-box{padding:40px}
+.tabs{display:flex;gap:10px;margin-bottom:24px}
+.tab{flex:1;padding:12px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;cursor:pointer;font-weight:600}
+.tab.active{background:#4f46e5;color:#fff;border-color:#4f46e5}
+.input-group{margin-bottom:16px}
+.input-group label{display:block;font-size:14px;font-weight:600;margin-bottom:6px;color:#374151}
+.input-group input{width:100%;padding:12px 14px;border:1px solid #d1d5db;border-radius:10px;outline:none}
+.input-group input:focus{border-color:#4f46e5;box-shadow:0 0 0 3px rgba(79,70,229,.15)}
+.btn{width:100%;padding:13px;background:#4f46e5;color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;margin-top:8px}
+.btn:hover{background:#4338ca}
+.small{font-size:13px;color:#6b7280;margin-top:12px;text-align:center}
+/* NOTIFICAÇÕES */
+.header-notif{position:fixed;top:16px;right:16px;display:flex;align-items:center;gap:12px}
+.bell{width:46px;height:46px;background:#fff;border-radius:50%;display:grid;place-items:center;box-shadow:0 6px 20px rgba(0,0,0,.1);cursor:pointer;position:relative;font-size:20px}
+.badge{position:absolute;top:-2px;right:-2px;background:#ef4444;color:#fff;font-size:11px;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-weight:700}
+.notif-panel{position:fixed;top:70px;right:16px;width:360px;background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.15);display:none;max-height:70vh;overflow:auto;z-index:99}
+.notif-panel.show{display:block}
+.notif-header{padding:16px;font-weight:700;border-bottom:1px solid #eee;display:flex;justify-content:space-between}
+.notif-item{padding:14px 16px;border-bottom:1px solid #f3f4f6;display:flex;gap:12px}
+.notif-item b{font-size:14px}
+.notif-item p{font-size:13px;color:#6b7280}
+.toast-container{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:10px;z-index:100}
+.toast{background:#111827;color:#fff;padding:14px 18px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.2);display:flex;gap:10px;animation:slideIn .3s ease;max-width:360px}
+.toast.success{border-left:4px solid #10b981}
+.toast.email{border-left:4px solid #3b82f6}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+@media(max-width:768px){.container{grid-template-columns:1fr}.left{display:none}}
+</style>
+</head>
+<body>
+
+<div class="header-notif">
+  <div class="bell" onclick="togglePanel()">🔔 <span class="badge" id="badge">0</span></div>
+</div>
+
+<div class="notif-panel" id="panel">
+  <div class="notif-header"><span>Central de E-mails</span><span style="cursor:pointer" onclick="clearNotifs()">Limpar</span></div>
+  <div id="notifList"></div>
+</div>
+
+<div class="container">
+  <div class="left">
+    <h1>Notificações por E-mail</h1>
+    <p>Sistema completo de cadastro e login com simulação de envio de e-mails transacionais.</p>
+    <br>
+    <p>📧 E-mail de verificação<br>✅ E-mail de boas-vindas<br>🔐 E-mail de login detectado<br>⚠️ E-mail de tentativa falha</p>
+  </div>
+  <div class="form-box">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('login')">Login</button>
+      <button class="tab" onclick="switchTab('cadastro')">Cadastro</button>
+    </div>
+
+    <div id="loginForm">
+      <div class="input-group"><label>E-mail</label><input type="email" id="loginEmail" placeholder="seu@email.com"></div>
+      <div class="input-group"><label>Senha</label><input type="password" id="loginPass" placeholder="••••••••"></div>
+      <button class="btn" onclick="fazerLogin()">Entrar e Enviar E-mail</button>
+    </div>
+
+    <div id="cadastroForm" style="display:none">
+      <div class="input-group"><label>Nome</label><input type="text" id="cadNome" placeholder="Seu nome"></div>
+      <div class="input-group"><label>E-mail</label><input type="email" id="cadEmail" placeholder="seu@email.com"></div>
+      <div class="input-group"><label>Senha</label><input type="password" id="cadPass" placeholder="Crie uma senha"></div>
+      <button class="btn" onclick="fazerCadastro()">Cadastrar e Enviar E-mail</button>
+    </div>
+    <p class="small">Os e-mails são simulados e aparecem no sininho 🔔</p>
+  </div>
+</div>
+
+<div class="toast-container" id="toasts"></div>
+
+<script>
+let notificacoes = JSON.parse(localStorage.getItem('notifs') || '[]');
+
+function switchTab(t){
+  document.getElementById('loginForm').style.display = t==='login' ? 'block':'none';
+  document.getElementById('cadastroForm').style.display = t==='cadastro' ? 'block':'none';
+  document.querySelectorAll('.tab').forEach((el,i)=> el.classList.toggle('active', (t==='login'&&i===0)||(t==='cadastro'&&i===1)))
+}
+
+function pushNotif(titulo, msg, tipo='email'){
+  const n = {titulo, msg, hora: new Date().toLocaleTimeString(), tipo, id: Date.now()};
+  notificacoes.unshift(n);
+  localStorage.setItem('notifs', JSON.stringify(notificacoes));
+  renderNotifs();
+  showToast(titulo, msg, tipo);
+}
+
+function renderNotifs(){
+  document.getElementById('badge').innerText = notificacoes.length;
+  document.getElementById('notifList').innerHTML = notificacoes.length ? notificacoes.map(n=>`
+    <div class="notif-item">
+      <div>📧</div>
+      <div><b>${n.titulo}</b><p>${n.msg}</p><p style="font-size:11px;margin-top:4px">${n.hora}</p></div>
+    </div>
+  `).join('') : '<p style="padding:20px;text-align:center;color:#999">Nenhum e-mail ainda</p>';
+}
+
+function showToast(t,m,tipo){
+  const c = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = `toast ${tipo==='email'?'email':'success'}`;
+  el.innerHTML = `<div>📧</div><div><b>${t}</b><div style="font-size:13px;opacity:.9">${m}</div></div>`;
+  c.appendChild(el);
+  setTimeout(()=>el.remove(),4000);
+}
+
+function togglePanel(){document.getElementById('panel').classList.toggle('show')}
+function clearNotifs(){notificacoes=[];localStorage.setItem('notifs','[]');renderNotifs()}
+
+function fazerCadastro(){
+  const nome=document.getElementById('cadNome').value;
+  const email=document.getElementById('cadEmail').value;
+  const pass=document.getElementById('cadPass').value;
+  if(!nome||!email||!pass) return showToast('Erro','Preencha tudo','');
+  localStorage.setItem('user_'+email, JSON.stringify({nome,email,pass}));
+  pushNotif('E-mail de verificação enviado', `Olá ${nome}, enviamos um link para ${email} para ativar sua conta.`, 'email');
+  setTimeout(()=> pushNotif('Bem-vindo!', `Conta de ${nome} verificada com sucesso.`, 'success'), 1500);
+  switchTab('login');
+}
+
+function fazerLogin(){
+  const email=document.getElementById('loginEmail').value;
+  const pass=document.getElementById('loginPass').value;
+  const user = JSON.parse(localStorage.getItem('user_'+email)||'null');
+  if(!user || user.pass!==pass){
+    pushNotif('Tentativa de login falha', `Tentativa de login em ${email} às ${new Date().toLocaleString()}`, 'email');
+    return showToast('Erro','E-mail ou senha inválidos','');
+  }
+  pushNotif('Login detectado', `Novo acesso na conta ${email}. Se não foi você, troque sua senha.`, 'email');
+  pushNotif('E-mail de boas-vindas', `Olá ${user.nome}! Que bom te ver de novo.`, 'success');
+  showToast('Sucesso',`Bem-vindo ${user.nome}!`,'success');
+}
+
+renderNotifs();
+</script>
+</body>
+</html>

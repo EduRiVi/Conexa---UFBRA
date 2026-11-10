@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vision - Site Completo</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
+body{background:#f0f2f5;min-height:100vh}
+
+/* TELAS - SISTEMA DE ROTAS */
+.page{display:none;min-height:100vh}
+.page.active{display:flex}
+
+/* LOGIN */
+#page-login{background:linear-gradient(135deg,#667eea,#764ba2);align-items:center;justify-content:center}
+.card-login{background:#fff;width:360px;padding:32px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.2)}
+.card-login h1{font-size:24px;margin-bottom:8px}
+.card-login p{font-size:14px;color:#666;margin-bottom:24px}
+.input-group{margin-bottom:16px}
+.input-group label{font-size:13px;display:block;margin-bottom:6px}
+.input-group input{width:100%;padding:12px 14px;border:1px solid #ddd;border-radius:8px;outline:none}
+.input-group input:focus{border-color:#667eea;box-shadow:0 0 0 3px rgba(102,126,234,.15)}
+.btn{width:100%;padding:12px;border:none;border-radius:8px;background:#667eea;color:#fff;font-weight:600;cursor:pointer;transition:.2s}
+.btn:hover{background:#5a6fd6}
+
+/* SUCESSO SPLIT */
+#page-sucesso{background:#fff}
+.left{flex:1;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;color:#fff;padding:40px}
+.left h2{font-size:36px;line-height:1.2}
+.right{flex:1;display:flex;align-items:center;justify-content:center;background:#f8fafc}
+.card-sucesso{background:#fff;width:380px;padding:40px 32px;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,.08);text-align:center}
+.icon{width:72px;height:72px;background:#22c55e;color:#fff;font-size:40px;display:flex;align-items:center;justify-content:center;border-radius:50%;margin:0 auto 20px}
+.btn-dark{background:#111;width:100%;padding:13px;border:none;border-radius:10px;color:#fff;font-weight:600;cursor:pointer}
+
+/* DASHBOARD */
+#page-dashboard{flex-direction:column}
+.topbar{height:60px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 24px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.container{padding:24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;max-width:1000px;margin:0 auto;width:100%}
+.box{background:#fff;padding:20px;border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.05);cursor:pointer;transition:.2s}
+.box:hover{transform:translateY(-3px)}
+.btnSair{padding:8px 14px;border:none;border-radius:8px;background:#eee;cursor:pointer}
+</style>
+</head>
+<body>
+
+<!-- PAGINA 1 - LOGIN -->
+<div id="page-login" class="page active">
+  <div class="card-login">
+    <h1>Bem-vindo</h1>
+    <p>Faça login para continuar</p>
+    <form id="formLogin">
+      <div class="input-group">
+        <label>Email</label>
+        <input type="email" id="email" placeholder="seu@email.com" required>
+      </div>
+      <div class="input-group">
+        <label>Senha</label>
+        <input type="password" id="senha" placeholder="••••••••" required>
+      </div>
+      <button class="btn" type="submit">Entrar</button>
+    </form>
+  </div>
+</div>
+
+<!-- PAGINA 2 - SUCESSO SPLIT -->
+<div id="page-sucesso" class="page">
+  <div class="left"><h2>Acesso liberado<br>com sucesso!</h2></div>
+  <div class="right">
+    <div class="card-sucesso">
+      <div class="icon">✓</div>
+      <h1>Tudo certo!</h1>
+      <p>Seu login foi validado.<br>Você já pode acessar o sistema.</p>
+      <button class="btn-dark" onclick="navigate('dashboard')">Ir para o painel</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAGINA 3 - DASHBOARD -->
+<div id="page-dashboard" class="page">
+  <div class="topbar">
+    <b id="userName">Olá, usuário 👋</b>
+    <button class="btnSair" onclick="sessionStorage.removeItem('userEmail');navigate('login')">Sair</button>
+  </div>
+  <div class="container">
+    <div class="box" onclick="window.location.href='dashboard.html'"><h3>📊 Dashboard</h3><p>Visão geral do sistema</p></div>
+    <div class="box"><h3>👥 Clientes</h3><p>Gerenciar clientes</p></div>
+    <div class="box"><h3>📦 Produtos</h3><p>Controle de estoque</p></div>
+    <div class="box"><h3>⚙️ Config</h3><p>Ajustes do sistema</p></div>
+  </div>
+</div>
+
+<script>
+// FUNÇÃO PARA TROCAR DE PAGINA (sem recarregar - resolve o Page not found)
+function navigate(page){
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+}
+
+// LOGIN -> SUCESSO
+document.getElementById('formLogin').addEventListener('submit', function(e){
+  e.preventDefault();
+  const email = document.getElementById('email').value;
+  if(email){
+    document.getElementById('userName').innerText = 'Olá, ' + email + ' 👋';
+    sessionStorage.setItem('userEmail', email); // guarda o login para as outras páginas
+    navigate('sucesso');
+  }
+});
+
+// Se já estiver logado (ex.: voltou do dashboard.html), vai direto para a tela inicial
+const emailLogado = sessionStorage.getItem('userEmail');
+if(emailLogado){
+  document.getElementById('userName').innerText = 'Olá, ' + emailLogado + ' 👋';
+  navigate('dashboard');
+}
+</script>
+
+</body>
+</html>
+
+
+<!-- COLE ISSO NO FINAL DO SEU HTML, ANTES DO </body> - NÃO ALTERA SUA TELA -->
+<style>
+  #login-aceito-overlay{position:fixed;inset:0;background:rgba(15,23,42,.65);backdrop-filter:blur(6px);display:none;place-items:center;z-index:9999;padding:20px}
+  #login-aceito-overlay.show{display:grid}
+  .login-notif-box{background:#fff;width:100%;max-width:380px;border-radius:18px;overflow:hidden;animation:popIn .4s cubic-bezier(.34,1.56,.64,1);font-family:'Segoe UI',sans-serif}
+  .login-notif-head{background:linear-gradient(135deg,#10b981,#059669);color:#fff;padding:22px;text-align:center}
+  .login-notif-head .ico{width:58px;height:58px;background:#fff;color:#10b981;border-radius:50%;display:grid;place-items:center;font-size:28px;margin:0 auto 10px;font-weight:800}
+  .login-notif-body{padding:20px;color:#0f172a}
+  .login-email-preview{background:#f8fafc;border:1px dashed #cbd5e1;border-radius:10px;padding:12px;font-size:13px;margin:12px 0}
+  .login-tag{display:inline-block;background:#dcfce7;color:#166534;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700}
+  .login-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid #f1f5f9}
+  @keyframes popIn{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+  #login-toast{position:fixed;bottom:20px;right:20px;background:#111827;color:#fff;padding:14px 18px;border-radius:12px;display:none;align-items:center;gap:10px;z-index:10000;font-family:'Segoe UI',sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.3);border-left:4px solid #10b981}
+  #login-toast.show{display:flex;animation:slide .3s ease}
+  @keyframes slide{from{transform:translateX(100%)}to{transform:translateX(0)}}
+</style>
+
+<div id="login-aceito-overlay" onclick="if(event.target===this) fecharNotifLogin()">
+  <div class="login-notif-box">
+    <div class="login-notif-head">
+      <div class="ico">✓</div>
+      <h3 style="margin:0;font-size:19px">Login Aceito!</h3>
+      <p style="margin:4px 0 0;font-size:13px;opacity:.9">Notificação por e-mail enviada</p>
+    </div>
+    <div class="login-notif-body">
+      <span class="login-tag">📧 E-MAIL ENVIADO</span>
+      <div class="login-email-preview">
+        <b>Para:</b> <span id="notif-email-para">usuario@email.com</span><br>
+        <b>Assunto:</b> Novo acesso detectado
+      </div>
+      <div class="login-row"><span>📅 Data:</span><b id="notif-data">-</b></div>
+      <div class="login-row"><span>⏰ Hora:</span><b id="notif-hora">-</b></div>
+      <div class="login-row"><span>🌐 IP:</span><b id="notif-ip">-</b></div>
+      <button onclick="fecharNotifLogin()" style="width:100%;margin-top:16px;padding:12px;background:#0f172a;color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer">OK, entendi</button>
+    </div>
+  </div>
+</div>
+
+<div id="login-toast">📧 E-mail de login enviado para <b id="toast-email" style="margin-left:4px"></b></div>
+
+<script>
+// FUNÇÃO PRINCIPAL - CHAME ELA QUANDO O LOGIN FOR ACEITO
+function mostrarNotificacaoLoginAceito(emailDoUsuario) {
+  const agora = new Date();
+  document.getElementById('notif-email-para').innerText = emailDoUsuario || 'seu e-mail';
+  document.getElementById('toast-email').innerText = emailDoUsuario || 'seu e-mail';
+  document.getElementById('notif-data').innerText = agora.toLocaleDateString('pt-BR');
+  document.getElementById('notif-hora').innerText = agora.toLocaleTimeString('pt-BR');
+  document.getElementById('notif-ip').innerText = '189.' + Math.floor(Math.random()*200) + '.' + Math.floor(Math.random()*200) + '.XX';
+
+  // Mostra modal e toast
+  document.getElementById('login-aceito-overlay').classList.add('show');
+  const toast = document.getElementById('login-toast');
+  toast.classList.add('show');
+  setTimeout(()=> toast.classList.remove('show'), 4000);
+
+  // Aqui entra seu envio real de e-mail se tiver backend
+  // fetch('seu-backend.php', {method:'POST', body: JSON.stringify({email: emailDoUsuario})})
+}
+
+function fecharNotifLogin(){
+  document.getElementById('login-aceito-overlay').classList.remove('show');
+}
+
+// EXEMPLO DE INTEGRAÇÃO AUTOMÁTICA COM SEU FORM EXISTENTE
+// Se seu botão de login tem id="btnLogin", ele já vai funcionar sozinho
+document.addEventListener('DOMContentLoaded', ()=>{
+  const btn = document.querySelector('button[type="submit"], #btnLogin, .btn-login');
+  if(btn){
+    btn.addEventListener('click', (e)=>{
+      // Só mostra se o login for considerado válido
+      // Troque essa validação pela sua
+      const emailInput = document.querySelector('input[type="email"]');
+      const email = emailInput ? emailInput.value : 'usuario@email.com';
+      if(email && email.includes('@')){
+        setTimeout(()=> mostrarNotificacaoLoginAceito(email), 300);
+      }
+    });
+  }
+});
+</script>
+<!-- FIM DO BLOCO -->
